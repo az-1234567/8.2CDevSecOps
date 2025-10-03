@@ -17,53 +17,55 @@ pipeline {
 
     stage('Install dependencies') {
       steps {
-        sh 'npm ci 2>&1 | tee install.log'
+        bat 'npm install'
       }
     }
 
     stage('Run unit tests') {
       steps {
-        sh 'npm test 2>&1 | tee test.log || true'
+        bat 'npm test || exit 0'
       }
     }
 
     stage('Coverage') {
       steps {
-        sh 'npm run coverage 2>&1 | tee coverage.log || true'
+        bat 'npm run coverage || exit 0'
       }
     }
 
     stage('NPM Audit (security scan)') {
       steps {
-        sh 'npm audit --json > audit.json || true'
-        sh 'npm audit 2>&1 | tee audit.log || true'
+        bat 'npm audit --json > audit.json || exit 0'
+        bat 'npm audit > audit.log || exit 0'
       }
     }
 
     stage('SonarCloud Analysis') {
       steps {
-        sh '''
-          mkdir -p sonar
-          cd sonar
-          if [ ! -f sonar-scanner-cli.zip ]; then
-            curl -L -o sonar-scanner-cli.zip https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-4.8.0.2856-linux.zip
-            unzip sonar-scanner-cli.zip
-          fi
-          cd sonar-scanner-*/
-          ./bin/sonar-scanner \
-            -Dsonar.login=${SONAR_TOKEN} \
-            -Dsonar.projectKey=${SONAR_PROJECT_KEY} \
-            -Dsonar.organization=${SONAR_ORG} \
-            -Dsonar.host.url=https://sonarcloud.io \
-            -Dsonar.sources=../
+        bat '''
+        if not exist sonar mkdir sonar
+        cd sonar
+        if not exist sonar-scanner-cli.zip (
+          curl -L -o sonar-scanner-cli.zip https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-4.8.0.2856-windows.zip
+          powershell -Command "Expand-Archive sonar-scanner-cli.zip -DestinationPath ."
+        )
+        for /d %%D in (sonar-scanner-*) do set SCANNER_DIR=%%D
+        cd %SCANNER_DIR%
+        bin\\sonar-scanner.bat ^
+          -Dsonar.login=%SONAR_TOKEN% ^
+          -Dsonar.projectKey=%SONAR_PROJECT_KEY% ^
+          -Dsonar.organization=%SONAR_ORG% ^
+          -Dsonar.host.url=https://sonarcloud.io ^
+          -Dsonar.sources=../
         '''
       }
     }
 
     stage('Archive logs & coverage') {
       steps {
-        archiveArtifacts artifacts: 'install.log,test.log,coverage.log,audit.log,audit.json,**/coverage/lcov.info', allowEmptyArchive: true
+        archiveArtifacts artifacts: 'audit.json,audit.log,**/coverage/lcov.info', allowEmptyArchive: true
       }
     }
   }
 }
+
