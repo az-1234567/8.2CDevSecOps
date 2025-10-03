@@ -4,11 +4,12 @@ pipeline {
   }
 
   environment {
-    SONAR_TOKEN = credentials('SONAR_TOKEN')
-    GITHUB_REPO = 'https://github.com/az-1234567/8.2CDevSecOps.git'
-    SONAR_PROJECT_KEY = 'YOUR_SONAR_PROJECT_KEY'
-    SONAR_ORG = 'YOUR_SONAR_ORG'
-  }
+  SONAR_TOKEN = credentials('SONAR_TOKEN')
+  GITHUB_REPO = 'https://github.com/az-1234567/8.2CDevSecOps.git'
+  SONAR_PROJECT_KEY = 'az-1234567_8-2CDevSecOps'
+  SONAR_ORG = 'az-1234567'
+}
+
 
   stages {
     stage('Checkout') {
