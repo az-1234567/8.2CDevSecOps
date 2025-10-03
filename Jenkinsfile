@@ -1,14 +1,14 @@
 pipeline {
     agent any
     stages {
-        stage('Check Node') {
+        stage('Build') {
             steps {
-                bat 'node -v'
-                bat 'npm -v'
-            }
-        }
-    }
-}
+                bat 'npm install'
+            } // closes steps
+        } // closes stage
+    } // closes stages
+} // closes pipeline
+
 
 
   environment {
