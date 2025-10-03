@@ -1,15 +1,12 @@
 pipeline {
-  agent {
-    docker { image 'node:18' }
-  }
+  agent any
 
   environment {
-  SONAR_TOKEN = credentials('SONAR_TOKEN')
-  GITHUB_REPO = 'https://github.com/az-1234567/8.2CDevSecOps.git'
-  SONAR_PROJECT_KEY = 'az-1234567_8-2CDevSecOps'
-  SONAR_ORG = 'az-1234567'
-}
-
+    SONAR_TOKEN = credentials('SONAR_TOKEN')
+    GITHUB_REPO = 'https://github.com/az-1234567/8.2CDevSecOps.git'
+    SONAR_PROJECT_KEY = 'az-1234567_8-2CDevSecOps'
+    SONAR_ORG = 'az-1234567'
+  }
 
   stages {
     stage('Checkout') {
@@ -39,8 +36,6 @@ pipeline {
     stage('NPM Audit (security scan)') {
       steps {
         sh 'npm audit --json > audit.json || true'
-        sh 'cat audit.json | jq . > audit_pretty.json || true || true'
-        sh 'cat audit_pretty.json 2>/dev/null || true'
         sh 'npm audit 2>&1 | tee audit.log || true'
       }
     }
@@ -69,13 +64,6 @@ pipeline {
       steps {
         archiveArtifacts artifacts: 'install.log,test.log,coverage.log,audit.log,audit.json,**/coverage/lcov.info', allowEmptyArchive: true
       }
-    }
-  }
-
-  post {
-    always {
-      sh 'tail -n 4000 $(echo ${WORKSPACE}/install.log || true) > console_snapshot.log || true'
-      archiveArtifacts artifacts: 'console_snapshot.log', allowEmptyArchive: true
     }
   }
 }
